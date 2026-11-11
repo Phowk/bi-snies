@@ -1,0 +1,27 @@
+<mat-sidenav-container class="shell">
+  <mat-sidenav mode="side" opened class="nav">
+    <div class="marca">
+      <mat-icon>school</mat-icon>
+      <div>
+        <strong>SNIES BI</strong>
+        <small>Universidad de Nariño</small>
+      </div>
+    </div>
+    <mat-nav-list>
+      @for (e of enlaces; track e.ruta) {
+        <a mat-list-item [routerLink]="e.ruta" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
+          <mat-icon matListItemIcon>{{ e.icono }}</mat-icon>
+          <span matListItemTitle>{{ e.texto }}</span>
+        </a>
+      }
+    </mat-nav-list>
+    @if (modoSimulado) {
+      <p class="aviso-mock"><mat-icon inline>science</mat-icon> Datos simulados (sin backend)</p>
+    }
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <main class="contenido">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

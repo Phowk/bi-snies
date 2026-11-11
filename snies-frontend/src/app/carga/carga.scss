@@ -1,0 +1,82 @@
+.encabezado {
+  margin-bottom: 24px;
+  h1 { font: var(--mat-sys-headline-small); margin: 0 0 4px; }
+  p { margin: 0; color: var(--mat-sys-on-surface-variant); }
+}
+
+.zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  border: 2px dashed var(--mat-sys-outline);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+  transition: background 120ms, border-color 120ms;
+  &:hover, &.activa {
+    border-color: var(--mat-sys-primary);
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+  strong { font: var(--mat-sys-title-medium); color: var(--mat-sys-on-surface); }
+}
+
+.icono-zona { font-size: 48px; width: 48px; height: 48px; color: var(--mat-sys-primary); }
+
+.mensaje-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mat-sys-error);
+}
+
+.archivo {
+  margin-top: 16px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.archivo-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  span { color: var(--mat-sys-on-surface-variant); }
+}
+
+.paso {
+  padding: 24px;
+  h2 { font: var(--mat-sys-title-large); margin: 0 0 16px; }
+}
+
+.etapas { color: var(--mat-sys-on-surface-variant); }
+.nota { color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-body-small); }
+
+.titulo-resultado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  h2 { margin: 0; }
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 20px 0 8px;
+  div { display: flex; flex-direction: column; padding: 12px; border-radius: 12px; background: var(--mat-sys-surface-container); }
+  span { color: var(--mat-sys-on-surface-variant); font: var(--mat-sys-label-medium); }
+  strong { font: var(--mat-sys-headline-small); }
+}
+
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; margin-top: 8px; }

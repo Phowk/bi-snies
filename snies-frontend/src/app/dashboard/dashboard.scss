@@ -1,0 +1,80 @@
+.encabezado {
+  margin-bottom: 16px;
+  h1 { font: var(--mat-sys-headline-small); margin: 0 0 4px; }
+  p { margin: 0; color: var(--mat-sys-on-surface-variant); }
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  mat-form-field { width: 190px; }
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 72px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container);
+  span { font: var(--mat-sys-label-large); color: var(--mat-sys-on-surface-variant); }
+  strong { font: var(--mat-sys-headline-medium); }
+  small { font: var(--mat-sys-body-medium); color: var(--mat-sys-on-surface-variant); }
+  &.vacio { opacity: 0.5; }
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  .ancho { grid-column: 1 / -1; }
+}
+
+@media (max-width: 1000px) {
+  .rejilla { grid-template-columns: minmax(0, 1fr); }
+}
+
+.grafico { height: 300px; width: 100%; }
+.grafico.bajo { height: 180px; }
+.grafico.alto { height: 380px; }
+
+.nota { font: var(--mat-sys-body-small); color: var(--mat-sys-on-surface-variant); margin: 8px 0 0; }
+
+.muestra {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  vertical-align: middle;
+  &.pos { background: #2a78d6; }
+  &.neg { background: #e34948; }
+}
+
+.scroll { overflow-x: auto; }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--mat-sys-outline-variant); text-align: left; }
+  th { font: var(--mat-sys-label-medium); color: var(--mat-sys-on-surface-variant); }
+  .num { text-align: right; }
+  tr.depto { cursor: pointer; font-weight: 500; &:hover { background: var(--mat-sys-surface-container-high); } }
+  tr.depto mat-icon { vertical-align: -3px; color: var(--mat-sys-on-surface-variant); }
+  tr.muni td:first-child { padding-left: 32px; color: var(--mat-sys-on-surface-variant); }
+  tr.total td { font-weight: 700; border-top: 2px solid var(--mat-sys-outline); }
+  tr.udenar { background: var(--mat-sys-primary-container); color: var(--mat-sys-on-primary-container); font-weight: 500; }
+  .sube { color: #b3261e; }
+  .baja { color: #006300; }
+}

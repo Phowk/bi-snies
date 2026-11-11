@@ -1,0 +1,88 @@
+<header class="encabezado">
+  <div>
+    <h1>Historial de cargas</h1>
+    <p>Trazabilidad de cada ejecución del ETL (audit.log_cargas).</p>
+  </div>
+  <div class="acciones">
+    <button mat-button (click)="actualizar()"><mat-icon>refresh</mat-icon> Actualizar</button>
+    <a mat-flat-button routerLink="/carga"><mat-icon>upload_file</mat-icon> Nueva carga</a>
+  </div>
+</header>
+
+<div class="resumen">
+  <span><strong>{{ resumen().total }}</strong> cargas</span>
+  <span class="ok"><strong>{{ resumen().exitosas }}</strong> exitosas</span>
+  <span class="ko"><strong>{{ resumen().errores }}</strong> con error</span>
+</div>
+
+<mat-card appearance="outlined" class="tabla">
+  @if (cargas() === undefined) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+  @if (error()) {
+    <p class="vacio">No se pudo obtener el historial. Verifique que el backend esté en ejecución.</p>
+  }
+  <div class="scroll">
+    <table mat-table [dataSource]="fuente" matSort matSortActive="id_carga" matSortDirection="desc">
+      <ng-container matColumnDef="id_carga">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>#</th>
+        <td mat-cell *matCellDef="let c">{{ c.id_carga }}</td>
+      </ng-container>
+      <ng-container matColumnDef="nombre_archivo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Archivo</th>
+        <td mat-cell *matCellDef="let c" class="archivo">{{ c.nombre_archivo }}<small>{{ c.peso_archivo_kb / 1024 | number: '1.1-1' }} MB</small></td>
+      </ng-container>
+      <ng-container matColumnDef="fecha_inicio">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Inicio</th>
+        <td mat-cell *matCellDef="let c">{{ c.fecha_inicio | date: 'short' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="duracion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Duración</th>
+        <td mat-cell *matCellDef="let c">{{ duracionSeg(c) === null ? '—' : duracionSeg(c) + ' s' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+        <td mat-cell *matCellDef="let c"><app-estado-carga [estado]="c.estado" /></td>
+      </ng-container>
+      <ng-container matColumnDef="total_filas_origen">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="num">Leídas</th>
+        <td mat-cell *matCellDef="let c" class="num">{{ c.total_filas_origen | number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="filas_cargadas_hechos">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="num">Cargadas</th>
+        <td mat-cell *matCellDef="let c" class="num">{{ c.filas_cargadas_hechos | number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="filas_rechazadas">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="num">Rechazadas</th>
+        <td mat-cell *matCellDef="let c" class="num">{{ c.filas_rechazadas | number }}</td>
+      </ng-container>
+      <ng-container matColumnDef="reconciliacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="num">Reconciliación</th>
+        <td mat-cell *matCellDef="let c" class="num">{{ reconciliacion(c) === null ? '—' : (reconciliacion(c) | number: '1.1-1') + ' %' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columnas; sticky: true"></tr>
+      <tr mat-row *matRowDef="let c; columns: columnas" (click)="alternar(c)" [class.activa]="seleccionada()?.id_carga === c.id_carga"></tr>
+      <tr class="mat-row" *matNoDataRow><td class="vacio" [attr.colspan]="columnas.length">Aún no hay cargas registradas.</td></tr>
+    </table>
+  </div>
+</mat-card>
+
+@if (seleccionada(); as c) {
+  <mat-card appearance="outlined" class="detalle">
+    <div class="detalle-titulo">
+      <h2>Carga #{{ c.id_carga }} · {{ c.nombre_archivo }}</h2>
+      <button mat-icon-button (click)="seleccionada.set(null)" aria-label="Cerrar detalle"><mat-icon>close</mat-icon></button>
+    </div>
+    <dl>
+      <dt>Estado</dt><dd><app-estado-carga [estado]="c.estado" /></dd>
+      <dt>Inicio</dt><dd>{{ c.fecha_inicio | date: 'medium' }}</dd>
+      <dt>Fin</dt><dd>{{ c.fecha_fin ? (c.fecha_fin | date: 'medium') : 'En ejecución' }}</dd>
+      <dt>Tamaño</dt><dd>{{ c.peso_archivo_kb | number: '1.0-1' }} KB</dd>
+      <dt>Filas origen → hechos</dt><dd>{{ c.total_filas_origen | number }} → {{ c.filas_cargadas_hechos | number }} ({{ c.filas_rechazadas | number }} rechazadas)</dd>
+      @if (c.mensaje_error) {
+        <dt>Mensaje de error</dt><dd><code>{{ c.mensaje_error }}</code></dd>
+      }
+    </dl>
+  </mat-card>
+}

@@ -1,0 +1,146 @@
+<header class="encabezado">
+  <h1>Oferta de programas académicos</h1>
+  <p>Cubo OLAP sobre dw.fact_programa. Los filtros seleccionan un subcubo (dice) y se aplican a todos los indicadores.</p>
+</header>
+
+<section class="filtros" aria-label="Filtros">
+  @for (c of campos; track c.clave) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ c.etiqueta }}</mat-label>
+      <mat-select multiple [value]="filtros()[c.clave]" (selectionChange)="cambiar(c.clave, $event.value)" placeholder="Todos">
+        @for (o of opcionesDe(c.clave); track o) {
+          <mat-option [value]="o">{{ o }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  }
+  <button mat-button (click)="limpiar()" [disabled]="!hayFiltros()"><mat-icon>filter_alt_off</mat-icon> Limpiar</button>
+</section>
+
+<section class="kpis">
+  @if (kpis.hasValue()) {
+    @let k = kpis.value();
+    <div class="kpi"><span>Programas</span><strong>{{ k.total_programas | number }}</strong></div>
+    <div class="kpi"><span>Créditos promedio</span><strong>{{ k.promedio_creditos === null ? '—' : (k.promedio_creditos | number: '1.1-1') }}</strong></div>
+    <div class="kpi"><span>Duración promedio</span><strong>{{ k.promedio_periodos === null ? '—' : (k.promedio_periodos | number: '1.1-1') }} <small>periodos</small></strong></div>
+    <div class="kpi"><span>Matrícula promedio</span><strong>{{ k.costo_promedio === null ? '—' : millones(k.costo_promedio) }}</strong></div>
+  } @else {
+    @for (i of [1, 2, 3, 4]; track i) { <div class="kpi vacio"></div> }
+  }
+</section>
+
+<section class="rejilla">
+  <app-panel titulo="Programas por nivel de formación" codigo="CS-1" operacion="Agregación" [recurso]="cs1.res">
+    <div echarts [options]="gCs1()" class="grafico"></div>
+  </app-panel>
+
+  <app-panel titulo="Universidad de Nariño por modalidad" codigo="CS-2" operacion="Slice por institución" [recurso]="cs2.res">
+    @if (cs2.res.isLoading() || cs2.filas().length) {
+      <div echarts [options]="gCs2()" class="grafico bajo"></div>
+      <p class="nota">
+        Créditos promedio:
+        @for (r of cs2.filas(); track r.modalidad; let ultimo = $last) {
+          {{ r.modalidad }} {{ r.promedio_creditos === null ? '—' : (r.promedio_creditos | number: '1.1-1') }}{{ ultimo ? '' : ' · ' }}
+        }
+      </p>
+    } @else {
+      <p class="nota">Sin programas de la Universidad de Nariño para los filtros elegidos.</p>
+    }
+  </app-panel>
+
+  <app-panel titulo="Programas registrados por año y periodicidad" codigo="CS-3" operacion="Agregación temporal (ignora el filtro de año)" [recurso]="cs3.res" class="ancho">
+    <div echarts [options]="gCs3()" class="grafico"></div>
+  </app-panel>
+
+  <app-panel titulo="Costo promedio de matrícula por departamento" codigo="CS-4" operacion="Agregación por ubicación" [recurso]="cs4.res">
+    <div echarts [options]="gCs4()" class="grafico"></div>
+  </app-panel>
+
+  <app-panel titulo="Créditos y duración por modalidad" codigo="CS-5" operacion="Agregación por modalidad" [recurso]="cs5.res">
+    <table class="tabla">
+      <thead><tr><th>Modalidad</th><th class="num">Programas</th><th class="num">Créditos prom.</th><th class="num">Periodos prom.</th></tr></thead>
+      <tbody>
+        @for (r of cs5.filas(); track r.modalidad) {
+          <tr><td>{{ r.modalidad }}</td><td class="num">{{ r.total_programas | number }}</td><td class="num">{{ r.promedio_creditos === null ? '—' : (r.promedio_creditos | number: '1.1-1') }}</td><td class="num">{{ r.promedio_periodos === null ? '—' : (r.promedio_periodos | number: '1.1-1') }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </app-panel>
+
+  <app-panel titulo="Oferta por departamento y municipio" codigo="CC-2" operacion="Roll-up / drill-down" [recurso]="cc2.res">
+    <table class="tabla">
+      <thead><tr><th>Ubicación</th><th class="num">Programas</th><th class="num">Matrícula prom.</th></tr></thead>
+      <tbody>
+        @for (r of filasCc2(); track r.departamento + r.municipio) {
+          @switch (r.nivel_agregacion) {
+            @case (1) {
+              <tr class="depto" (click)="alternar(r.departamento)">
+                <td><mat-icon inline>{{ abiertos().has(r.departamento) ? 'expand_more' : 'chevron_right' }}</mat-icon> {{ r.departamento }}</td>
+                <td class="num">{{ r.total_programas | number }}</td>
+                <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+              </tr>
+            }
+            @case (0) {
+              <tr class="muni">
+                <td>{{ r.municipio }}</td>
+                <td class="num">{{ r.total_programas | number }}</td>
+                <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+              </tr>
+            }
+            @default {
+              <tr class="total">
+                <td>Total nacional</td>
+                <td class="num">{{ r.total_programas | number }}</td>
+                <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+              </tr>
+            }
+          }
+        }
+      </tbody>
+    </table>
+  </app-panel>
+
+  <app-panel titulo="Modalidad por departamento" codigo="CC-4" operacion="Pivot" [recurso]="cc4.res">
+    <table class="tabla">
+      <thead><tr><th>Departamento</th><th class="num">Presencial</th><th class="num">Virtual</th><th class="num">A distancia</th><th class="num">Total</th><th class="num">% presencial</th></tr></thead>
+      <tbody>
+        @for (r of cc4.filas(); track r.departamento) {
+          <tr>
+            <td>{{ r.departamento }}</td><td class="num">{{ r.presencial | number }}</td><td class="num">{{ r.virtual | number }}</td>
+            <td class="num">{{ r.a_distancia | number }}</td><td class="num"><strong>{{ r.total | number }}</strong></td>
+            <td class="num">{{ r.pct_presencial === null ? '—' : (r.pct_presencial | number: '1.1-1') }} %</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </app-panel>
+
+  <app-panel titulo="Ranking de instituciones por oferta" codigo="CC-5" operacion="Benchmarking (top 10 + Udenar)" [recurso]="cc5.res" class="ancho">
+    <div class="scroll">
+      <table class="tabla">
+        <thead><tr><th>#</th><th>Institución</th><th>Sector</th><th class="num">Programas</th><th class="num">Créditos</th><th class="num">Periodos</th><th class="num">Matrícula prom.</th><th class="num">vs. promedio</th></tr></thead>
+        <tbody>
+          @for (r of cc5.filas(); track r.nombre_institucion) {
+            <tr [class.udenar]="r.nombre_institucion === 'Universidad de Nariño'">
+              <td>{{ r.puesto_oferta }}</td><td>{{ r.nombre_institucion }}</td><td>{{ r.sector }}</td>
+              <td class="num">{{ r.total_programas | number }}</td><td class="num">{{ r.prom_creditos === null ? '—' : (r.prom_creditos | number: '1.1-1') }}</td><td class="num">{{ r.prom_periodos === null ? '—' : (r.prom_periodos | number: '1.1-1') }}</td>
+              <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+              <td class="num" [class.sube]="(r.dif_costo_pct ?? 0) > 0" [class.baja]="(r.dif_costo_pct ?? 0) < 0">
+                {{ r.dif_costo_pct === null ? '—' : ((r.dif_costo_pct > 0 ? '+' : '') + (r.dif_costo_pct | number: '1.1-1') + ' %') }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </app-panel>
+
+  <app-panel titulo="Nariño frente a Colombia por campo amplio" codigo="CC-6" operacion="Diferencia en puntos porcentuales de participación" [recurso]="cc6.res">
+    <div echarts [options]="gCc6()" class="grafico alto"></div>
+    <p class="nota"><span class="muestra pos"></span> Nariño concentra más oferta que el país · <span class="muestra neg"></span> menos</p>
+  </app-panel>
+
+  <app-panel titulo="Variación anual de la oferta" codigo="CC-7" operacion="Drill-down por año (sin departamentos filtrados: Nariño, Cauca, Putumayo)" [recurso]="cc7.res">
+    <div echarts [options]="gCc7()" class="grafico alto"></div>
+  </app-panel>
+</section>

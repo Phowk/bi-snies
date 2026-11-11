@@ -1,0 +1,37 @@
+# Las reglas de Angular están en snies-frontend/.gitignore
+
+# Copia comprimida de la carpeta de documentos (ya versionada sin comprimir)
+*.zip
+
+# Python / FastAPI (backend)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+*.egg-info/
+
+# Secretos y configuración local (credenciales de PostgreSQL)
+.env
+.env.*
+!.env.example
+
+# Archivos SNIES subidos al backend y datos locales
+uploads/
+*.xlsx
+*.csv
+!**/fixtures/**
+
+# Node (por si se agrega otro paquete fuera de snies-frontend)
+node_modules/
+
+# Editores y sistema operativo
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*

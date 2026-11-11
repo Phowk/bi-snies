@@ -1,0 +1,86 @@
+<header class="encabezado">
+  <h1>Cargar archivo de programas</h1>
+  <p>Suba el reporte de programas académicos del SNIES. El sistema lo lleva a staging, lo limpia y lo carga en la bodega automáticamente.</p>
+</header>
+
+@if (fase() === 'inicio') {
+  <label
+    class="zona"
+    [class.activa]="arrastrando()"
+    (dragover)="$event.preventDefault(); arrastrando.set(true)"
+    (dragleave)="arrastrando.set(false)"
+    (drop)="soltar($event)">
+    <input #input type="file" [accept]="aceptar" (change)="seleccionar(input)" hidden />
+    <mat-icon class="icono-zona">cloud_upload</mat-icon>
+    <strong>Arrastre el archivo aquí o haga clic para buscarlo</strong>
+    <span>Formatos .xlsx o .csv · máximo {{ maxMb }} MB</span>
+  </label>
+
+  @if (error()) {
+    <p class="mensaje-error" role="alert"><mat-icon inline>error</mat-icon> {{ error() }}</p>
+  }
+
+  @if (archivo(); as f) {
+    <mat-card appearance="outlined" class="archivo">
+      <mat-icon>description</mat-icon>
+      <div class="archivo-info">
+        <strong>{{ f.name }}</strong>
+        <span>{{ tamano(f) | number: '1.1-1' }} MB</span>
+      </div>
+      <button mat-button (click)="archivo.set(null)">Quitar</button>
+      <button mat-flat-button (click)="iniciar()"><mat-icon>play_arrow</mat-icon> Iniciar carga</button>
+    </mat-card>
+  }
+}
+
+@if (fase() === 'subiendo') {
+  <mat-card appearance="outlined" class="paso">
+    <h2>Subiendo {{ archivo()?.name }}</h2>
+    <mat-progress-bar mode="determinate" [value]="progreso()" />
+    <p>{{ progreso() }} % enviado</p>
+  </mat-card>
+}
+
+@if (fase() === 'procesando') {
+  <mat-card appearance="outlined" class="paso">
+    <h2>Procesando carga #{{ carga()?.id_carga }}</h2>
+    <mat-progress-bar mode="indeterminate" />
+    <ol class="etapas">
+      <li>Extracción del archivo</li>
+      <li>Carga en staging</li>
+      <li>Limpieza y normalización</li>
+      <li>Dimensiones y tabla de hechos</li>
+    </ol>
+    <p class="nota">Puede salir de esta página; la carga sigue en el servidor y aparecerá en el historial.</p>
+  </mat-card>
+}
+
+@if (fase() === 'fin' && carga(); as c) {
+  <mat-card appearance="outlined" class="paso resultado" [class.con-error]="c.estado === 'ERROR'">
+    <div class="titulo-resultado">
+      <h2>Carga #{{ c.id_carga }} · {{ c.nombre_archivo }}</h2>
+      <app-estado-carga [estado]="c.estado" />
+    </div>
+
+    @if (c.estado === 'EXITOSO') {
+      <div class="cifras">
+        <div><span>Filas leídas</span><strong>{{ c.total_filas_origen | number }}</strong></div>
+        <div><span>Cargadas en hechos</span><strong>{{ c.filas_cargadas_hechos | number }}</strong></div>
+        <div><span>Rechazadas</span><strong>{{ c.filas_rechazadas | number }}</strong></div>
+        <div><span>Reconciliación</span><strong>{{ (c.total_filas_origen ? (100 * c.filas_cargadas_hechos) / c.total_filas_origen : 0) | number: '1.1-1' }} %</strong></div>
+      </div>
+    } @else {
+      <p class="mensaje-error"><mat-icon inline>error</mat-icon> {{ c.mensaje_error }}</p>
+      <p class="nota">La transacción se revirtió: la bodega no fue modificada. Corrija el archivo y vuelva a cargarlo.</p>
+    }
+    <p class="nota">Finalizó {{ c.fecha_fin | date: 'medium' }}</p>
+
+    <div class="acciones">
+      <button mat-button (click)="reiniciar()"><mat-icon>upload_file</mat-icon> Cargar otro archivo</button>
+      <a mat-button routerLink="/historial"><mat-icon>history</mat-icon> Ver historial</a>
+      @if (c.estado === 'EXITOSO') {
+        <a mat-flat-button routerLink="/dashboard"><mat-icon>insights</mat-icon> Ver tablero</a>
+      }
+    </div>
+  </mat-card>
+}
