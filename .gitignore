@@ -3,6 +3,10 @@
 # Copia comprimida de la carpeta de documentos (ya versionada sin comprimir)
 *.zip
 
+# Documentos markdown en la raíz (fuera de backend y subcarpetas)
+/*.md
+!/backend/**/*.md
+
 # Python / FastAPI (backend)
 __pycache__/
 *.py[cod]
