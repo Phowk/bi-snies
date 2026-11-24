@@ -1,7 +1,7 @@
 // Bodega simulada: genera programas con forma SNIES y reimplementa en TypeScript las consultas del cubo OLAP
 // (CS-1..CS-5, CC-2, CC-4..CC-7). Solo se usa cuando environment.useMock = true.
 import {
-  Cc2Row, Cc4Row, Cc5Row, Cc6Row, Cc7Row, Cs1Row, Cs2Row, Cs3Row, Cs4Row, Cs5Row, Filtros, Kpis, OpcionesFiltro,
+  Cc2Row, Cc3Row, Cc4Row, Cc5Row, Cc6Row, Cc7Row, Cs1Row, Cs2Row, Cs3Row, Cs4Row, Cs5Row, Filtros, Kpis, OpcionesFiltro,
 } from '../models';
 
 export interface Programa {
@@ -162,6 +162,8 @@ export function kpis(ps: Programa[], f: Filtros): Kpis {
   const x = filtrar(ps, f);
   return {
     total_programas: x.length,
+    total_instituciones: new Set(x.map(p => p.institucion)).size,
+    total_departamentos: new Set(x.map(p => p.departamento)).size,
     promedio_creditos: round(avg(x.map(p => p.numero_creditos))),
     promedio_periodos: round(avg(x.map(p => p.numero_periodos))),
     costo_promedio: round(avg(x.map(p => p.costo_matricula)), 0),
@@ -226,6 +228,24 @@ export function cc2(ps: Programa[], f: Filtros): Cc2Row[] {
     filas.push({ departamento, municipio: '(todos)', nivel_agregacion: 1, total_programas: gd.length, costo_promedio: costo(gd) });
   }
   filas.push({ departamento: 'TOTAL NACIONAL', municipio: '(todos)', nivel_agregacion: 2, total_programas: x.length, costo_promedio: costo(x) });
+  return filas;
+}
+
+/** GROUP BY CUBE (modalidad, nivel_formacion, sector) */
+export function cc3(ps: Programa[], f: Filtros): Cc3Row[] {
+  const x = filtrar(ps, f);
+  const filas: Cc3Row[] = [];
+  for (const conM of [true, false]) for (const conN of [true, false]) for (const conS of [true, false]) {
+    const clave = (p: Programa) => `${conM ? p.modalidad : 'TODAS'}|${conN ? p.nivel_formacion : 'TODOS'}|${conS ? p.sector : 'TODOS'}`;
+    for (const [k, g] of groupBy(x, clave)) {
+      const [modalidad, nivel_formacion, sector] = k.split('|');
+      filas.push({
+        modalidad, nivel_formacion, sector, total_programas: g.length,
+        promedio_creditos: round(avg(g.map(p => p.numero_creditos))),
+        promedio_periodos: round(avg(g.map(p => p.numero_periodos))),
+      });
+    }
+  }
   return filas;
 }
 
@@ -308,5 +328,5 @@ export function cc7(ps: Programa[], f: Filtros): Cc7Row[] {
   return filas;
 }
 
-export const CONSULTAS = { cs1, cs2, cs3, cs4, cs5, cc2, cc4, cc5, cc6, cc7 } as const;
+export const CONSULTAS = { cs1, cs2, cs3, cs4, cs5, cc2, cc3, cc4, cc5, cc6, cc7 } as const;
 export type NombreConsulta = keyof typeof CONSULTAS;

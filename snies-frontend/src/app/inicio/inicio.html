@@ -1,0 +1,84 @@
+<section class="hero" aria-labelledby="titulo-hero">
+  <div class="hero-interior">
+    <div class="hero-texto">
+      <p class="sobretitulo">Inteligencia de Negocios · Universidad de Nariño</p>
+      <h1 id="titulo-hero">La oferta académica de Colombia, lista para tomar decisiones</h1>
+      <p class="bajada">
+        Consulte cuántos programas se ofrecen, dónde, en qué modalidad y a qué costo, con foco en la Universidad de Nariño
+        y su región. Sin escribir consultas: elija filtros y lea las respuestas.
+      </p>
+      <div class="cta">
+        <a mat-flat-button routerLink="/explorar"><mat-icon>insights</mat-icon> Explorar la oferta</a>
+        <a mat-stroked-button routerLink="/carga"><mat-icon>upload_file</mat-icon> Cargar datos nuevos</a>
+      </div>
+    </div>
+
+    <aside class="hero-cifras" aria-label="La bodega en cifras">
+      @if (kpis.hasValue() && !sinDatos()) {
+        @let k = kpis.value();
+        <div class="cifra-principal">
+          <strong>{{ k.total_programas | number }}</strong>
+          <span>programas académicos en la bodega</span>
+        </div>
+        <dl class="cifras">
+          <div><dt>Instituciones</dt><dd>{{ k.total_instituciones | number }}</dd></div>
+          <div><dt>Departamentos</dt><dd>{{ k.total_departamentos | number }}</dd></div>
+          <div><dt>Créditos promedio</dt><dd>{{ k.promedio_creditos === null ? '—' : (k.promedio_creditos | number: '1.0-0') }}</dd></div>
+        </dl>
+        @if (ultima(); as u) {
+          <p class="actualizado"><mat-icon inline aria-hidden="true">update</mat-icon> Actualizado el {{ u.fecha_fin | date: 'longDate' }} con {{ u.nombre_archivo }}</p>
+        }
+      } @else if (sinDatos()) {
+        <div class="vacio">
+          <mat-icon aria-hidden="true">inventory_2</mat-icon>
+          <p><strong>La bodega aún está vacía.</strong> Cargue el reporte de programas del SNIES para empezar.</p>
+          <a mat-flat-button routerLink="/carga">Cargar el primer archivo</a>
+        </div>
+      } @else if (kpis.error()) {
+        <div class="vacio">
+          <mat-icon aria-hidden="true">cloud_off</mat-icon>
+          <p>No se pudo conectar con la bodega de datos. Verifique que el backend esté en ejecución.</p>
+        </div>
+      } @else {
+        <div class="cargando" aria-busy="true"><span></span><span></span><span></span></div>
+      }
+    </aside>
+  </div>
+</section>
+
+<div class="fondo-blanco">
+<section class="seccion" aria-labelledby="titulo-preguntas">
+  <h2 id="titulo-preguntas">Preguntas que puede responder</h2>
+  <ul class="preguntas">
+    @for (p of preguntas; track p.vista) {
+      <li>
+        <a class="pregunta" [class]="'pregunta ' + p.acento" routerLink="/explorar" [queryParams]="{ vista: p.vista }">
+          <mat-icon class="icono" aria-hidden="true">{{ p.icono }}</mat-icon>
+          <h3>{{ p.titulo }}</h3>
+          <p>{{ p.texto }}</p>
+          <span class="ir">Ver respuesta <mat-icon inline aria-hidden="true">arrow_forward</mat-icon></span>
+        </a>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="seccion como" aria-labelledby="titulo-como">
+  <h2 id="titulo-como">Cómo funciona</h2>
+  <ol class="pasos">
+    @for (p of pasos; track p.titulo; let i = $index) {
+      <li [class]="p.acento">
+        <span class="numero" aria-hidden="true">{{ i + 1 }}</span>
+        <mat-icon aria-hidden="true">{{ p.icono }}</mat-icon>
+        <h3>{{ p.titulo }}</h3>
+        <p>{{ p.texto }}</p>
+      </li>
+    }
+  </ol>
+  <p class="fuente">
+    Detrás hay una bodega de datos en estrella (modelo de Kimball) con seis dimensiones y un proceso ETL automático;
+    el historial de cargas guarda la trazabilidad de cada archivo.
+    <a routerLink="/historial">Ver historial de cargas</a>
+  </p>
+</section>
+</div>

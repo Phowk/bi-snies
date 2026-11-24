@@ -8,8 +8,8 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const texto = (fixture.nativeElement as HTMLElement).textContent;
-    expect(texto).toContain('Cargar archivo');
+    expect(texto).toContain('Explorar la oferta');
+    expect(texto).toContain('Cargar datos');
     expect(texto).toContain('Historial de cargas');
-    expect(texto).toContain('Oferta académica');
   });
 });

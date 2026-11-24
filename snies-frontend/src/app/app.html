@@ -1,27 +1,48 @@
-<mat-sidenav-container class="shell">
-  <mat-sidenav mode="side" opened class="nav">
-    <div class="marca">
-      <mat-icon>school</mat-icon>
-      <div>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<header class="barra">
+  <div class="barra-interior">
+    <a routerLink="/" class="marca" aria-label="SNIES BI, inicio">
+      <span class="logo" aria-hidden="true"><mat-icon>school</mat-icon></span>
+      <span class="marca-texto">
         <strong>SNIES BI</strong>
         <small>Universidad de Nariño</small>
-      </div>
-    </div>
-    <mat-nav-list>
-      @for (e of enlaces; track e.ruta) {
-        <a mat-list-item [routerLink]="e.ruta" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
-          <mat-icon matListItemIcon>{{ e.icono }}</mat-icon>
-          <span matListItemTitle>{{ e.texto }}</span>
-        </a>
-      }
-    </mat-nav-list>
+      </span>
+    </a>
+
+    <nav aria-label="Principal">
+      <ul>
+        @for (e of enlaces; track e.ruta) {
+          <li>
+            <a [routerLink]="e.ruta" routerLinkActive="activo" ariaCurrentWhenActive="page">
+              <mat-icon aria-hidden="true">{{ e.icono }}</mat-icon>
+              <span class="texto-enlace">{{ e.texto }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
     @if (modoSimulado) {
-      <p class="aviso-mock"><mat-icon inline>science</mat-icon> Datos simulados (sin backend)</p>
+      <span class="aviso-mock" matTooltip="El frontend responde con datos simulados; no consulta el backend.">
+        <mat-icon inline aria-hidden="true">science</mat-icon> Datos simulados
+      </span>
     }
-  </mat-sidenav>
-  <mat-sidenav-content>
-    <main class="contenido">
-      <router-outlet />
-    </main>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+
+    <button mat-icon-button class="tema" (click)="tema.alternar()">
+      <span class="tema-a-oscuro"><mat-icon aria-hidden="true">dark_mode</mat-icon><span class="solo-lector">Cambiar a tema oscuro</span></span>
+      <span class="tema-a-claro"><mat-icon aria-hidden="true">light_mode</mat-icon><span class="solo-lector">Cambiar a tema claro</span></span>
+    </button>
+  </div>
+</header>
+
+<main id="contenido" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer class="pie">
+  <div class="pie-interior">
+    <span>Datos: Sistema Nacional de Información de la Educación Superior (SNIES), Ministerio de Educación Nacional.</span>
+    <span>Universidad de Nariño · Inteligencia de Negocios · {{ anio }}</span>
+  </div>
+</footer>

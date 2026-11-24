@@ -1,146 +1,319 @@
-<header class="encabezado">
-  <h1>Oferta de programas académicos</h1>
-  <p>Cubo OLAP sobre dw.fact_programa. Los filtros seleccionan un subcubo (dice) y se aplican a todos los indicadores.</p>
-</header>
-
-<section class="filtros" aria-label="Filtros">
-  @for (c of campos; track c.clave) {
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>{{ c.etiqueta }}</mat-label>
-      <mat-select multiple [value]="filtros()[c.clave]" (selectionChange)="cambiar(c.clave, $event.value)" placeholder="Todos">
-        @for (o of opcionesDe(c.clave); track o) {
-          <mat-option [value]="o">{{ o }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-  }
-  <button mat-button (click)="limpiar()" [disabled]="!hayFiltros()"><mat-icon>filter_alt_off</mat-icon> Limpiar</button>
-</section>
-
-<section class="kpis">
-  @if (kpis.hasValue()) {
-    @let k = kpis.value();
-    <div class="kpi"><span>Programas</span><strong>{{ k.total_programas | number }}</strong></div>
-    <div class="kpi"><span>Créditos promedio</span><strong>{{ k.promedio_creditos === null ? '—' : (k.promedio_creditos | number: '1.1-1') }}</strong></div>
-    <div class="kpi"><span>Duración promedio</span><strong>{{ k.promedio_periodos === null ? '—' : (k.promedio_periodos | number: '1.1-1') }} <small>periodos</small></strong></div>
-    <div class="kpi"><span>Matrícula promedio</span><strong>{{ k.costo_promedio === null ? '—' : millones(k.costo_promedio) }}</strong></div>
-  } @else {
-    @for (i of [1, 2, 3, 4]; track i) { <div class="kpi vacio"></div> }
-  }
-</section>
-
-<section class="rejilla">
-  <app-panel titulo="Programas por nivel de formación" codigo="CS-1" operacion="Agregación" [recurso]="cs1.res">
-    <div echarts [options]="gCs1()" class="grafico"></div>
-  </app-panel>
-
-  <app-panel titulo="Universidad de Nariño por modalidad" codigo="CS-2" operacion="Slice por institución" [recurso]="cs2.res">
-    @if (cs2.res.isLoading() || cs2.filas().length) {
-      <div echarts [options]="gCs2()" class="grafico bajo"></div>
-      <p class="nota">
-        Créditos promedio:
-        @for (r of cs2.filas(); track r.modalidad; let ultimo = $last) {
-          {{ r.modalidad }} {{ r.promedio_creditos === null ? '—' : (r.promedio_creditos | number: '1.1-1') }}{{ ultimo ? '' : ' · ' }}
-        }
-      </p>
-    } @else {
-      <p class="nota">Sin programas de la Universidad de Nariño para los filtros elegidos.</p>
-    }
-  </app-panel>
-
-  <app-panel titulo="Programas registrados por año y periodicidad" codigo="CS-3" operacion="Agregación temporal (ignora el filtro de año)" [recurso]="cs3.res" class="ancho">
-    <div echarts [options]="gCs3()" class="grafico"></div>
-  </app-panel>
-
-  <app-panel titulo="Costo promedio de matrícula por departamento" codigo="CS-4" operacion="Agregación por ubicación" [recurso]="cs4.res">
-    <div echarts [options]="gCs4()" class="grafico"></div>
-  </app-panel>
-
-  <app-panel titulo="Créditos y duración por modalidad" codigo="CS-5" operacion="Agregación por modalidad" [recurso]="cs5.res">
-    <table class="tabla">
-      <thead><tr><th>Modalidad</th><th class="num">Programas</th><th class="num">Créditos prom.</th><th class="num">Periodos prom.</th></tr></thead>
-      <tbody>
-        @for (r of cs5.filas(); track r.modalidad) {
-          <tr><td>{{ r.modalidad }}</td><td class="num">{{ r.total_programas | number }}</td><td class="num">{{ r.promedio_creditos === null ? '—' : (r.promedio_creditos | number: '1.1-1') }}</td><td class="num">{{ r.promedio_periodos === null ? '—' : (r.promedio_periodos | number: '1.1-1') }}</td></tr>
-        }
-      </tbody>
-    </table>
-  </app-panel>
-
-  <app-panel titulo="Oferta por departamento y municipio" codigo="CC-2" operacion="Roll-up / drill-down" [recurso]="cc2.res">
-    <table class="tabla">
-      <thead><tr><th>Ubicación</th><th class="num">Programas</th><th class="num">Matrícula prom.</th></tr></thead>
-      <tbody>
-        @for (r of filasCc2(); track r.departamento + r.municipio) {
-          @switch (r.nivel_agregacion) {
-            @case (1) {
-              <tr class="depto" (click)="alternar(r.departamento)">
-                <td><mat-icon inline>{{ abiertos().has(r.departamento) ? 'expand_more' : 'chevron_right' }}</mat-icon> {{ r.departamento }}</td>
-                <td class="num">{{ r.total_programas | number }}</td>
-                <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
-              </tr>
-            }
-            @case (0) {
-              <tr class="muni">
-                <td>{{ r.municipio }}</td>
-                <td class="num">{{ r.total_programas | number }}</td>
-                <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
-              </tr>
-            }
-            @default {
-              <tr class="total">
-                <td>Total nacional</td>
-                <td class="num">{{ r.total_programas | number }}</td>
-                <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
-              </tr>
-            }
-          }
-        }
-      </tbody>
-    </table>
-  </app-panel>
-
-  <app-panel titulo="Modalidad por departamento" codigo="CC-4" operacion="Pivot" [recurso]="cc4.res">
-    <table class="tabla">
-      <thead><tr><th>Departamento</th><th class="num">Presencial</th><th class="num">Virtual</th><th class="num">A distancia</th><th class="num">Total</th><th class="num">% presencial</th></tr></thead>
-      <tbody>
-        @for (r of cc4.filas(); track r.departamento) {
-          <tr>
-            <td>{{ r.departamento }}</td><td class="num">{{ r.presencial | number }}</td><td class="num">{{ r.virtual | number }}</td>
-            <td class="num">{{ r.a_distancia | number }}</td><td class="num"><strong>{{ r.total | number }}</strong></td>
-            <td class="num">{{ r.pct_presencial === null ? '—' : (r.pct_presencial | number: '1.1-1') }} %</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </app-panel>
-
-  <app-panel titulo="Ranking de instituciones por oferta" codigo="CC-5" operacion="Benchmarking (top 10 + Udenar)" [recurso]="cc5.res" class="ancho">
-    <div class="scroll">
-      <table class="tabla">
-        <thead><tr><th>#</th><th>Institución</th><th>Sector</th><th class="num">Programas</th><th class="num">Créditos</th><th class="num">Periodos</th><th class="num">Matrícula prom.</th><th class="num">vs. promedio</th></tr></thead>
-        <tbody>
-          @for (r of cc5.filas(); track r.nombre_institucion) {
-            <tr [class.udenar]="r.nombre_institucion === 'Universidad de Nariño'">
-              <td>{{ r.puesto_oferta }}</td><td>{{ r.nombre_institucion }}</td><td>{{ r.sector }}</td>
-              <td class="num">{{ r.total_programas | number }}</td><td class="num">{{ r.prom_creditos === null ? '—' : (r.prom_creditos | number: '1.1-1') }}</td><td class="num">{{ r.prom_periodos === null ? '—' : (r.prom_periodos | number: '1.1-1') }}</td>
-              <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
-              <td class="num" [class.sube]="(r.dif_costo_pct ?? 0) > 0" [class.baja]="(r.dif_costo_pct ?? 0) < 0">
-                {{ r.dif_costo_pct === null ? '—' : ((r.dif_costo_pct > 0 ? '+' : '') + (r.dif_costo_pct | number: '1.1-1') + ' %') }}
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+<div class="pagina">
+  <header class="encabezado-pagina">
+    <div>
+      <h1>Explorar la oferta académica</h1>
+      <p>Elija filtros y recorra las preguntas por pestaña. Todas las cifras se recalculan con la selección.</p>
     </div>
-  </app-panel>
+    <div class="reporte-general">
+      <button mat-flat-button (click)="descargarGeneral()" [disabled]="!listoGeneral() || generandoGeneral()">
+        <mat-icon>{{ generandoGeneral() ? 'hourglass_top' : 'picture_as_pdf' }}</mat-icon>
+        {{ generandoGeneral() ? 'Generando reporte…' : 'Reporte general (PDF)' }}
+      </button>
+      <span class="nota" aria-live="polite">
+        @if (errorGeneral()) { <span class="error">No se pudo generar el reporte. Intente de nuevo.</span> }
+        @else if (!listoGeneral()) { Esperando a que terminen las consultas… }
+        @else { Las 11 consultas con los filtros actuales }
+      </span>
+    </div>
+  </header>
 
-  <app-panel titulo="Nariño frente a Colombia por campo amplio" codigo="CC-6" operacion="Diferencia en puntos porcentuales de participación" [recurso]="cc6.res">
-    <div echarts [options]="gCc6()" class="grafico alto"></div>
-    <p class="nota"><span class="muestra pos"></span> Nariño concentra más oferta que el país · <span class="muestra neg"></span> menos</p>
-  </app-panel>
+  <!-- Filtros: fijos bajo la barra superior al desplazarse -->
+  <div class="filtros-fijos">
+    <section class="filtros" aria-label="Filtros">
+      <div class="controles">
+        @for (c of campos; track c.clave) {
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ c.etiqueta }}</mat-label>
+            <mat-select multiple [value]="filtros()[c.clave]" (selectionChange)="cambiar(c.clave, $event.value)" placeholder="Todos">
+              @for (o of opcionesDe(c.clave); track o) {
+                <mat-option [value]="o">{{ o }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+        <div class="acciones-filtro">
+          @if (narino()) {
+            <button mat-stroked-button (click)="alternarNarino()" [attr.aria-pressed]="soloNarino()" [class.presionado]="soloNarino()">
+              <mat-icon>{{ soloNarino() ? 'check' : 'location_on' }}</mat-icon> Solo Nariño
+            </button>
+          }
+          <button mat-button (click)="limpiar()" [disabled]="!hayFiltros()"><mat-icon>filter_alt_off</mat-icon> Limpiar</button>
+        </div>
+      </div>
 
-  <app-panel titulo="Variación anual de la oferta" codigo="CC-7" operacion="Drill-down por año (sin departamentos filtrados: Nariño, Cauca, Putumayo)" [recurso]="cc7.res">
-    <div echarts [options]="gCc7()" class="grafico alto"></div>
-  </app-panel>
-</section>
+      <div class="resumen-filtros" aria-live="polite">
+        @if (activos().length) {
+          <span class="rotulo">Filtrando por</span>
+          <mat-chip-set aria-label="Filtros activos">
+            @for (a of activos(); track a.clave + a.valor) {
+              <mat-chip (removed)="quitar(a.clave, a.valor)">
+                {{ a.valor }}
+                <button matChipRemove [attr.aria-label]="'Quitar ' + a.etiqueta + ' ' + a.valor"><mat-icon>cancel</mat-icon></button>
+              </mat-chip>
+            }
+          </mat-chip-set>
+        } @else {
+          <span class="rotulo">Mostrando toda la oferta nacional registrada en el SNIES</span>
+        }
+      </div>
+    </section>
+  </div>
+
+  <!-- Cifras principales -->
+  <section class="kpis" aria-label="Cifras principales">
+    @if (kpis.hasValue()) {
+      @let k = kpis.value();
+      <div class="kpi destacado"><span><mat-icon aria-hidden="true">school</mat-icon>Programas</span><strong>{{ k.total_programas | number }}</strong></div>
+      <div class="kpi acento-naranja"><span><mat-icon aria-hidden="true">account_balance</mat-icon>Instituciones</span><strong>{{ k.total_instituciones | number }}</strong></div>
+      <div class="kpi acento-verde"><span><mat-icon aria-hidden="true">menu_book</mat-icon>Créditos promedio</span><strong>{{ k.promedio_creditos === null ? '—' : (k.promedio_creditos | number: '1.1-1') }}</strong></div>
+      <div class="kpi acento-violeta"><span><mat-icon aria-hidden="true">schedule</mat-icon>Duración promedio</span><strong>{{ k.promedio_periodos === null ? '—' : (k.promedio_periodos | number: '1.1-1') }} <small>periodos</small></strong></div>
+      <div class="kpi acento-azul"><span><mat-icon aria-hidden="true">payments</mat-icon>Matrícula promedio</span><strong>{{ k.costo_promedio === null ? '—' : millones(k.costo_promedio) }}</strong></div>
+    } @else if (kpis.error()) {
+      <p class="error-kpi" role="alert"><mat-icon inline>cloud_off</mat-icon> No se pudo conectar con la bodega de datos. Verifique que el backend esté en ejecución.</p>
+    } @else {
+      @for (i of [1, 2, 3, 4, 5]; track i) { <div class="kpi vacio" aria-hidden="true"></div> }
+    }
+  </section>
+
+  <mat-tab-group [selectedIndex]="indiceVista()" (selectedIndexChange)="elegirVista($event)" mat-stretch-tabs="false" mat-align-tabs="start" animationDuration="150ms" class="pestanas">
+    <!-- ======================================================== PANORAMA -->
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon class="icono-tab">{{ vistas[0].icono }}</mat-icon>{{ vistas[0].texto }}</ng-template>
+      <p class="intro-vista acento-azul"><mat-icon aria-hidden="true">{{ vistas[0].icono }}</mat-icon>{{ vistas[0].intro }}</p>
+      <div class="rejilla acento-azul">
+        <app-panel [info]="P.cs1" [recurso]="cs1.res" [vacio]="cs1.vacio()" [pdf]="pdfCs1">
+          <div echarts [options]="gCs1()" class="grafico" role="img" aria-label="Barras: programas por nivel de formación"></div>
+        </app-panel>
+
+        <app-panel [info]="P.cs5" [recurso]="cs5.res" [vacio]="cs5.vacio()" [pdf]="pdfCs5">
+          <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Créditos y duración por modalidad">
+            <table class="tabla">
+              <thead><tr><th scope="col">Modalidad</th><th scope="col" class="num">Programas</th><th scope="col" class="num">Créditos</th><th scope="col" class="num">Periodos</th></tr></thead>
+              <tbody>
+                @for (r of cs5.filas(); track r.modalidad) {
+                  <tr><th scope="row">{{ r.modalidad }}</th><td class="num">{{ r.total_programas | number }}</td><td class="num">{{ r.promedio_creditos === null ? '—' : (r.promedio_creditos | number: '1.1-1') }}</td><td class="num">{{ r.promedio_periodos === null ? '—' : (r.promedio_periodos | number: '1.1-1') }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </app-panel>
+
+        <app-panel [info]="P.cs4" [recurso]="cs4.res" [vacio]="cs4.vacio()" [pdf]="pdfCs4" class="ancho">
+          <div echarts [options]="gCs4()" class="grafico" [style.height.px]="altoCs4()" role="img" aria-label="Barras: costo promedio de matrícula por departamento"></div>
+        </app-panel>
+
+        <app-panel [info]="P.cc3" [recurso]="cc3.res" [vacio]="cc3.vacio()" [pdf]="pdfCc3" class="ancho">
+          @let m = matrizCc3();
+          <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Programas por nivel de formación y sector">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Nivel de formación</th>
+                  @for (s of m.sectores; track s) { <th scope="col" class="num">{{ s }}</th> }
+                  <th scope="col" class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (n of m.niveles; track n.nivel) {
+                  <tr>
+                    <th scope="row">{{ n.nivel }}</th>
+                    @for (v of n.celdas; track $index) {
+                      <td class="num">{{ v | number }} <small class="pct">{{ n.total ? ((100 * v) / n.total | number: '1.0-0') : 0 }} %</small></td>
+                    }
+                    <td class="num"><strong>{{ n.total | number }}</strong></td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr class="total">
+                  <th scope="row">Total</th>
+                  @for (v of m.totales.celdas; track $index) { <td class="num">{{ v | number }}</td> }
+                  <td class="num">{{ m.totales.total | number }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </app-panel>
+      </div>
+    </mat-tab>
+
+    <!-- ======================================================== UNIVERSIDAD DE NARIÑO -->
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon class="icono-tab">{{ vistas[1].icono }}</mat-icon>{{ vistas[1].texto }}</ng-template>
+      <p class="intro-vista acento-naranja"><mat-icon aria-hidden="true">{{ vistas[1].icono }}</mat-icon>{{ vistas[1].intro }}</p>
+
+      @if (cs2.res.hasValue()) {
+        <div class="titular">
+          <mat-icon aria-hidden="true">account_balance</mat-icon>
+          <p>
+            La Universidad de Nariño registra <strong>{{ totalUdenar() | number }} programas</strong>
+            @if (udenarEnRanking(); as u) {
+              y ocupa el <strong>puesto {{ u.puesto_oferta }}</strong> entre las instituciones por cantidad de oferta
+            }
+            con los filtros actuales.
+          </p>
+        </div>
+      }
+
+      <div class="rejilla acento-naranja">
+        <app-panel [info]="P.cs2" [recurso]="cs2.res" [vacio]="cs2.vacio()" [pdf]="pdfCs2"
+          mensajeVacio="Sin programas de la Universidad de Nariño para los filtros elegidos." class="ancho">
+          <div echarts [options]="gCs2()" class="grafico bajo" role="img" aria-label="Barras: programas de la Universidad de Nariño por modalidad"></div>
+          <ul class="leyenda-datos">
+            @for (r of cs2.filas(); track r.modalidad) {
+              <li><span>{{ r.modalidad }}</span><strong>{{ r.promedio_creditos === null ? '—' : (r.promedio_creditos | number: '1.1-1') }}</strong> créditos promedio</li>
+            }
+          </ul>
+        </app-panel>
+
+        <app-panel [info]="P.cc5" [recurso]="cc5.res" [vacio]="cc5.vacio()" [pdf]="pdfCc5" class="ancho">
+          <div class="tabla-desplazable completa" tabindex="0" role="region" aria-label="Ranking de instituciones por oferta">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Puesto</th><th scope="col">Institución</th><th scope="col">Sector</th><th scope="col" class="num">Programas</th>
+                  <th scope="col" class="num">Créditos</th><th scope="col" class="num">Periodos</th><th scope="col" class="num">Matrícula prom.</th><th scope="col" class="num">vs. promedio</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of cc5.filas(); track r.nombre_institucion) {
+                  <tr [class.udenar]="esUdenar(r.nombre_institucion)">
+                    <td><span class="puesto">{{ r.puesto_oferta }}</span></td>
+                    <th scope="row">{{ r.nombre_institucion }}</th>
+                    <td>{{ r.sector }}</td>
+                    <td class="num">{{ r.total_programas | number }}</td>
+                    <td class="num">{{ r.prom_creditos === null ? '—' : (r.prom_creditos | number: '1.1-1') }}</td>
+                    <td class="num">{{ r.prom_periodos === null ? '—' : (r.prom_periodos | number: '1.1-1') }}</td>
+                    <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+                    <td class="num" [class.sube]="(r.dif_costo_pct ?? 0) > 0" [class.baja]="(r.dif_costo_pct ?? 0) < 0">
+                      {{ r.dif_costo_pct === null ? '—' : ((r.dif_costo_pct > 0 ? '+' : '') + (r.dif_costo_pct | number: '1.1-1') + ' %') }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </app-panel>
+      </div>
+    </mat-tab>
+
+    <!-- ======================================================== TERRITORIO -->
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon class="icono-tab">{{ vistas[2].icono }}</mat-icon>{{ vistas[2].texto }}</ng-template>
+      <p class="intro-vista acento-verde"><mat-icon aria-hidden="true">{{ vistas[2].icono }}</mat-icon>{{ vistas[2].intro }}</p>
+      <div class="rejilla acento-verde">
+        <app-panel [info]="P.cc6" [recurso]="cc6.res" [vacio]="cc6.vacio()" [pdf]="pdfCc6" class="ancho">
+          <div echarts [options]="gCc6()" class="grafico alto" role="img" aria-label="Barras divergentes: diferencia de participación por campo amplio entre Nariño y Colombia"></div>
+          <p class="nota"><span class="muestra pos" aria-hidden="true"></span> Nariño concentra más oferta que el país · <span class="muestra neg" aria-hidden="true"></span> menos</p>
+        </app-panel>
+
+        <app-panel [info]="P.cc2" [recurso]="cc2.res" [vacio]="cc2.vacio()" [pdf]="pdfCc2">
+          <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Programas por departamento y municipio">
+            <table class="tabla">
+              <thead><tr><th scope="col">Ubicación</th><th scope="col" class="num">Programas</th><th scope="col" class="num">Matrícula prom.</th></tr></thead>
+              <tbody>
+                @for (r of filasCc2(); track r.departamento + r.municipio) {
+                  @switch (r.nivel_agregacion) {
+                    @case (1) {
+                      <tr class="depto">
+                        <th scope="row">
+                          <button class="desplegar" (click)="alternar(r.departamento)" [attr.aria-expanded]="abiertos().has(r.departamento)">
+                            <mat-icon aria-hidden="true">{{ abiertos().has(r.departamento) ? 'expand_more' : 'chevron_right' }}</mat-icon>
+                            {{ r.departamento }}
+                          </button>
+                        </th>
+                        <td class="num">{{ r.total_programas | number }}</td>
+                        <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+                      </tr>
+                    }
+                    @case (0) {
+                      <tr class="muni">
+                        <th scope="row">{{ r.municipio }}</th>
+                        <td class="num">{{ r.total_programas | number }}</td>
+                        <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+                      </tr>
+                    }
+                    @default {
+                      <tr class="total">
+                        <th scope="row">Total nacional</th>
+                        <td class="num">{{ r.total_programas | number }}</td>
+                        <td class="num">{{ r.costo_promedio === null ? '—' : millones(r.costo_promedio) }}</td>
+                      </tr>
+                    }
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </app-panel>
+
+        <app-panel [info]="P.cc4" [recurso]="cc4.res" [vacio]="cc4.vacio()" [pdf]="pdfCc4">
+          <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Modalidad de la oferta por departamento">
+            <table class="tabla">
+              <thead><tr><th scope="col">Departamento</th><th scope="col" class="num">Presencial</th><th scope="col" class="num">Virtual</th><th scope="col" class="num">A distancia</th><th scope="col" class="num">Total</th><th scope="col" class="num">% presencial</th></tr></thead>
+              <tbody>
+                @for (r of cc4.filas(); track r.departamento) {
+                  <tr>
+                    <th scope="row">{{ r.departamento }}</th><td class="num">{{ r.presencial | number }}</td><td class="num">{{ r.virtual | number }}</td>
+                    <td class="num">{{ r.a_distancia | number }}</td><td class="num"><strong>{{ r.total | number }}</strong></td>
+                    <td class="num">
+                      <span class="barra-pct"><span [style.inline-size.%]="r.pct_presencial ?? 0"></span></span>
+                      {{ r.pct_presencial === null ? '—' : (r.pct_presencial | number: '1.1-1') + ' %' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </app-panel>
+      </div>
+    </mat-tab>
+
+    <!-- ======================================================== TENDENCIAS -->
+    <mat-tab>
+      <ng-template mat-tab-label><mat-icon class="icono-tab">{{ vistas[3].icono }}</mat-icon>{{ vistas[3].texto }}</ng-template>
+      <p class="intro-vista acento-violeta"><mat-icon aria-hidden="true">{{ vistas[3].icono }}</mat-icon>{{ vistas[3].intro }}</p>
+      <div class="rejilla acento-violeta">
+        <app-panel [info]="P.cs3" [recurso]="cs3.res" [vacio]="cs3.vacio()" [pdf]="pdfCs3" class="ancho">
+          <div echarts [options]="gCs3()" class="grafico alto" role="img" aria-label="Líneas: programas registrados por año y periodicidad"></div>
+          <details class="ver-datos">
+            <summary>Ver los datos en tabla</summary>
+            <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Programas por año y periodicidad">
+              <table class="tabla">
+                <thead><tr><th scope="col">Año</th><th scope="col">Periodicidad</th><th scope="col" class="num">Programas</th></tr></thead>
+                <tbody>
+                  @for (r of cs3.filas(); track r.anio + r.periodicidad) {
+                    <tr><th scope="row">{{ r.anio }}</th><td>{{ r.periodicidad }}</td><td class="num">{{ r.total_programas | number }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </app-panel>
+
+        <app-panel [info]="P.cc7" [recurso]="cc7.res" [vacio]="cc7.vacio()" [pdf]="pdfCc7" class="ancho">
+          <div echarts [options]="gCc7()" class="grafico alto" role="img" aria-label="Líneas: programas por año en cada departamento"></div>
+          <details class="ver-datos">
+            <summary>Ver los datos en tabla</summary>
+            <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Variación anual por departamento">
+              <table class="tabla">
+                <thead><tr><th scope="col">Departamento</th><th scope="col">Año</th><th scope="col" class="num">Programas</th><th scope="col" class="num">Año anterior</th><th scope="col" class="num">Variación</th></tr></thead>
+                <tbody>
+                  @for (r of cc7.filas(); track r.departamento + r.anio) {
+                    <tr>
+                      <th scope="row">{{ r.departamento }}</th><td>{{ r.anio }}</td><td class="num">{{ r.total_programas | number }}</td>
+                      <td class="num">{{ r.programas_anio_anterior === null ? '—' : (r.programas_anio_anterior | number) }}</td>
+                      <td class="num" [class.crece]="(r.variacion ?? 0) > 0" [class.decrece]="(r.variacion ?? 0) < 0">
+                        {{ r.variacion === null ? '—' : (r.variacion > 0 ? '+' : '') + (r.variacion | number) + (r.variacion_pct === null ? '' : ' (' + (r.variacion_pct | number: '1.1-1') + ' %)') }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </app-panel>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

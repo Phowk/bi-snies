@@ -33,6 +33,8 @@ export type OpcionesFiltro = Filtros;
 
 export interface Kpis {
   total_programas: number;
+  total_instituciones: number;
+  total_departamentos: number;
   promedio_creditos: number | null;
   promedio_periodos: number | null;
   costo_promedio: number | null;
@@ -44,6 +46,8 @@ export interface Cs3Row { anio: number; periodicidad: string; total_programas: n
 export interface Cs4Row { departamento: string; programas_con_costo: number; costo_promedio_matricula: number }
 export interface Cs5Row { modalidad: string; promedio_creditos: number | null; promedio_periodos: number | null; total_programas: number }
 export interface Cc2Row { departamento: string; municipio: string; nivel_agregacion: 0 | 1 | 2; total_programas: number; costo_promedio: number | null }
+/** GROUP BY CUBE (modalidad, nivel_formacion, sector): 'TODAS'/'TODOS' marcan el subtotal de esa dimensión. */
+export interface Cc3Row { modalidad: string; nivel_formacion: string; sector: string; total_programas: number; promedio_creditos: number | null; promedio_periodos: number | null }
 export interface Cc4Row { departamento: string; presencial: number; virtual: number; a_distancia: number; total: number; pct_presencial: number | null }
 export interface Cc5Row {
   puesto_oferta: number; nombre_institucion: string; sector: string; total_programas: number;
@@ -51,3 +55,10 @@ export interface Cc5Row {
 }
 export interface Cc6Row { campo_amplio: string; programas_narino: number; programas_nacional: number; pct_narino: number; pct_nacional: number; diferencia_pp: number }
 export interface Cc7Row { departamento: string; anio: number; total_programas: number; programas_anio_anterior: number | null; variacion: number | null; variacion_pct: number | null }
+
+/** GET /api/etl/cargas/{id}/errores: anomalías de audit.log_errores_etl agrupadas por columna y motivo. */
+export interface ResumenErrores {
+  id_carga: number;
+  total_tipos: number;
+  items: { columna: string; motivo: string; ocurrencias: number; primera_fila: number | null }[];
+}

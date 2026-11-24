@@ -16,7 +16,7 @@ const VISTA: Record<EstadoCarga, { icono: string; texto: string }> = {
   styles: `
     .estado { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px; font: var(--mat-sys-label-medium); white-space: nowrap; }
     .EN_PROCESO { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
-    .EXITOSO { background: #d6f5dd; color: #0b5a23; }
+    .EXITOSO { background: var(--ok-fondo); color: var(--ok); }
     .ERROR { background: var(--mat-sys-error-container); color: var(--mat-sys-on-error-container); }
   `,
 })

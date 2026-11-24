@@ -1,18 +1,19 @@
-<header class="encabezado">
+<div class="pagina">
+<header class="encabezado-pagina">
   <div>
     <h1>Historial de cargas</h1>
-    <p>Trazabilidad de cada ejecución del ETL (audit.log_cargas).</p>
+    <p>Cada archivo cargado queda registrado con su resultado y sus cifras de control (audit.log_cargas). Seleccione una fila para ver el detalle.</p>
   </div>
   <div class="acciones">
     <button mat-button (click)="actualizar()"><mat-icon>refresh</mat-icon> Actualizar</button>
-    <a mat-flat-button routerLink="/carga"><mat-icon>upload_file</mat-icon> Nueva carga</a>
+    <a mat-flat-button routerLink="/carga"><mat-icon>upload_file</mat-icon> Cargar datos</a>
   </div>
 </header>
 
 <div class="resumen">
-  <span><strong>{{ resumen().total }}</strong> cargas</span>
-  <span class="ok"><strong>{{ resumen().exitosas }}</strong> exitosas</span>
-  <span class="ko"><strong>{{ resumen().errores }}</strong> con error</span>
+  <span class="acento-azul"><mat-icon aria-hidden="true">inventory_2</mat-icon><strong>{{ resumen().total }}</strong> cargas</span>
+  <span class="ok acento-verde"><mat-icon aria-hidden="true">check_circle</mat-icon><strong>{{ resumen().exitosas }}</strong> exitosas</span>
+  <span class="ko acento-naranja"><mat-icon aria-hidden="true">error</mat-icon><strong>{{ resumen().errores }}</strong> con error</span>
 </div>
 
 <mat-card appearance="outlined" class="tabla">
@@ -86,3 +87,4 @@
     </dl>
   </mat-card>
 }
+</div>

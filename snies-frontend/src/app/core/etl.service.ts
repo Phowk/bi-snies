@@ -2,7 +2,7 @@ import { HttpClient, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, filter, map, switchMap, takeWhile, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Carga } from './models';
+import { Carga, ResumenErrores } from './models';
 
 export const EXTENSIONES_PERMITIDAS = ['.xlsx', '.csv'];
 export const TAMANO_MAXIMO_MB = 50;
@@ -45,6 +45,10 @@ export class EtlService {
 
   obtener(id: number): Observable<Carga> {
     return this.http.get<Carga>(`${this.api}/etl/cargas/${id}`);
+  }
+
+  errores(id: number): Observable<ResumenErrores> {
+    return this.http.get<ResumenErrores>(`${this.api}/etl/cargas/${id}/errores`);
   }
 
   /** Consulta la carga cada INTERVALO_SONDEO_MS hasta que deja de estar EN_PROCESO (emite también el estado final). */

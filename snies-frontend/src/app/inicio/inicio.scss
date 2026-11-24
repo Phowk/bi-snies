@@ -1,0 +1,202 @@
+// ---------------------------------------------------------------- hero
+
+.hero {
+  background:
+    radial-gradient(circle at 85% 20%, color-mix(in srgb, var(--mat-sys-primary) 18%, transparent), transparent 55%),
+    radial-gradient(circle at 10% 90%, color-mix(in srgb, var(--mat-sys-tertiary) 12%, transparent), transparent 50%),
+    var(--mat-sys-surface-container-low);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.hero-interior {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 48px;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(40px, 8vw, 96px) 24px;
+  box-sizing: border-box;
+}
+
+.sobretitulo {
+  margin: 0 0 12px;
+  font: var(--mat-sys-label-large);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mat-sys-primary);
+}
+
+h1 {
+  margin: 0;
+  font: 600 clamp(2.1rem, 1.4rem + 2.6vw, 3.6rem) / 1.08 var(--fuente-titulos);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.bajada {
+  margin: 20px 0 32px;
+  max-width: 58ch;
+  font: var(--mat-sys-body-large);
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--mat-sys-on-surface-variant);
+  text-wrap: pretty;
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  a { height: 48px; padding-inline: 24px; border-radius: 24px; }
+}
+
+.hero-cifras {
+  padding: 32px;
+  border-radius: 24px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-lowest);
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.25);
+}
+
+.cifra-principal {
+  strong {
+    display: block;
+    font: 500 clamp(3rem, 2rem + 3vw, 4.5rem) / 1 Roboto, sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--mat-sys-primary);
+  }
+  span { font: var(--mat-sys-title-medium); color: var(--mat-sys-on-surface-variant); }
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 28px 0 0;
+  div { padding-top: 16px; border-top: 1px solid var(--mat-sys-outline-variant); }
+  dt { font: var(--mat-sys-label-medium); color: var(--mat-sys-on-surface-variant); }
+  dd { margin: 4px 0 0; font: 500 1.6rem/1.1 Roboto, sans-serif; font-variant-numeric: tabular-nums; }
+}
+
+.actualizado {
+  margin: 24px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  mat-icon { font-size: 40px; width: 40px; height: 40px; color: var(--mat-sys-primary); }
+  p { margin: 0; color: var(--mat-sys-on-surface-variant); }
+}
+
+.cargando {
+  display: grid;
+  gap: 12px;
+  span { height: 28px; border-radius: 8px; background: var(--mat-sys-surface-container-high); }
+  span:first-child { height: 72px; width: 70%; }
+}
+
+// ---------------------------------------------------------------- secciones
+
+.seccion {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 64px 24px 0;
+  box-sizing: border-box;
+  h2 { margin: 0 0 24px; font: 600 clamp(1.5rem, 1.2rem + 1vw, 2rem) / 1.2 var(--fuente-titulos); }
+}
+
+.preguntas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pregunta {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--acento) 30%, var(--mat-sys-outline-variant));
+  border-top: 4px solid var(--acento);
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--acento) 12%, transparent), transparent 70%),
+    var(--mat-sys-surface-container-lowest);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms, transform 150ms, box-shadow 150ms;
+  .icono {
+    font-size: 28px; width: 28px; height: 28px; padding: 10px; border-radius: 14px;
+    background: color-mix(in srgb, var(--acento) 18%, var(--mat-sys-surface-container-lowest)); color: var(--acento);
+  }
+  h3 { margin: 20px 0 8px; font: var(--mat-sys-title-large); }
+  p { margin: 0 0 20px; color: var(--mat-sys-on-surface-variant); line-height: 1.5; }
+  .ir { margin-top: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--mat-sys-primary); font: var(--mat-sys-label-large); }
+  &:hover { border-color: var(--acento); box-shadow: 0 12px 24px -16px rgb(0 0 0 / 0.3); }
+  &:focus-visible { outline: 3px solid var(--mat-sys-primary); outline-offset: 2px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pregunta:hover { transform: translateY(-2px); }
+}
+
+// Preguntas y "Cómo funciona" sobre fondo blanco (en oscuro, la superficie más baja).
+.fondo-blanco {
+  background: light-dark(#ffffff, var(--mat-sys-surface-container-lowest));
+}
+.como { padding-top: 64px; padding-bottom: 72px; }
+
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 32px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    position: relative;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--acento) 25%, transparent);
+    border-left: 4px solid var(--acento);
+    background: color-mix(in srgb, var(--acento) 7%, light-dark(#ffffff, var(--mat-sys-surface-container-lowest)));
+  }
+  .numero {
+    position: absolute; top: 12px; right: 16px;
+    font: 600 3rem/1 var(--fuente-titulos);
+    color: color-mix(in srgb, var(--acento) 25%, transparent);
+  }
+  mat-icon { font-size: 32px; width: 32px; height: 32px; color: var(--acento); }
+  h3 { margin: 12px 0 8px; font: var(--mat-sys-title-medium); }
+  p { margin: 0; color: var(--mat-sys-on-surface-variant); line-height: 1.5; }
+}
+
+.fuente {
+  margin: 40px 0 0;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: var(--fondo-pagina);
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.5;
+  a { color: var(--mat-sys-primary); font-weight: 500; }
+}
+
+@media (width < 900px) {
+  .hero-interior { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+}
+
+@media (width < 480px) {
+  .hero-cifras { padding: 24px; }
+  .cifras { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
