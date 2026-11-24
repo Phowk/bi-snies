@@ -1,39 +1,116 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
+// mat.theme emite los colores con light-dark(): basta con fijar color-scheme en la raíz.
 html {
   height: 100%;
   @include mat.theme(
     (
       color: (
         primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        tertiary: mat.$orange-palette,
       ),
       typography: Roboto,
       density: 0,
     )
   );
+
+  // Sigue al sistema por defecto. El <meta name="color-scheme"> (que TemaService modifica) puede fijarlo.
+  color-scheme: light dark;
+  &:has(> head > meta[name='color-scheme'][content='dark']) { color-scheme: dark; }
+  &:has(> head > meta[name='color-scheme'][content='light']) { color-scheme: light; }
+
+  // Alto de la barra superior: los elementos enfocados no quedan tapados por ella.
+  --alto-barra: 64px;
+  scroll-padding-top: calc(var(--alto-barra) + 16px);
+
+  // Tokens propios que no trae Material (colores de estado y del tema de los gráficos).
+  --ok: light-dark(#006300, #6fd67c);
+  --ok-fondo: light-dark(#d6f5dd, #10391b);
+  --sube: light-dark(#b3261e, #f2b8b5);
+  --baja: light-dark(#006300, #7fdc8c);
+  --serie-pos: light-dark(#2a78d6, #3987e5);
+  --serie-neg: light-dark(#e34948, #e66767);
+  --fuente-titulos: 'Roboto Serif', Georgia, serif;
+
+  // Acentos de las secciones: tonos medios, usados casi siempre mezclados con la superficie (tintes suaves).
+  --acento-azul: light-dark(#2a78d6, #6ea8ef);
+  --acento-naranja: light-dark(#e0a585, #f09a64);
+  --acento-verde: light-dark(#13865f, #57c79c);
+  --acento-violeta: light-dark(#6250d6, #a99cf0);
+  // Fondo de página levemente teñido: las tarjetas blancas resaltan sobre él.
+  --fondo-pagina: color-mix(in srgb, var(--mat-sys-primary) 5%, var(--mat-sys-surface));
+
+  accent-color: var(--mat-sys-primary);
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
+  background-color: var(--fondo-pagina);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
   margin: 0;
-  height: 100%;
+  min-height: 100%;
 }
-/* You can add global styles to this file, and also import other style files */
+
+// Botón de tema: ambos estados están en el HTML; se muestra el que corresponde sin depender de JS.
+.tema-a-claro { display: none; }
+@mixin tema-oscuro-activo {
+  .tema-a-oscuro { display: none; }
+  .tema-a-claro { display: inline-flex; }
+}
+:root:has(> head > meta[name='color-scheme'][content='dark']) { @include tema-oscuro-activo; }
+@media (prefers-color-scheme: dark) {
+  :root:not(:has(> head > meta[name='color-scheme'][content='light'])) { @include tema-oscuro-activo; }
+}
+
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// Contenedor de las páginas internas (la portada usa todo el ancho).
+.pagina {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  box-sizing: border-box;
+  &.angosta { max-width: 960px; }
+  @media (width < 600px) { padding: 20px 16px 40px; }
+}
+
+// Acento de una zona: los descendientes lo leen con var(--acento).
+.acento-azul { --acento: var(--acento-azul); }
+.acento-naranja { --acento: var(--acento-naranja); }
+.acento-verde { --acento: var(--acento-verde); }
+.acento-violeta { --acento: var(--acento-violeta); }
+
+// Encabezado común de las páginas internas: una banda con un degradado suave.
+.encabezado-pagina {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--acento-naranja) 16%, transparent), transparent 45%),
+    linear-gradient(120deg, color-mix(in srgb, var(--mat-sys-primary) 14%, var(--mat-sys-surface-container-lowest)), color-mix(in srgb, var(--acento-verde) 8%, var(--mat-sys-surface-container-lowest)));
+  @media (width < 600px) { padding: 20px; border-radius: 18px; }
+  h1 { font: 600 clamp(1.6rem, 1.2rem + 1.2vw, 2.1rem) / 1.2 var(--fuente-titulos); margin: 0 0 6px; letter-spacing: -0.01em; }
+  p { margin: 0; color: var(--mat-sys-on-surface-variant); max-width: 70ch; font: var(--mat-sys-body-large); }
+}
+
+// Contenedor desplazable de tablas: alcanzable con teclado y con encabezado fijo.
+.tabla-desplazable {
+  overflow: auto;
+  max-block-size: min(440px, 70vh);
+  border-radius: 8px;
+  &:focus-visible { outline: 2px solid var(--mat-sys-primary); outline-offset: 2px; }
+  &.completa { max-block-size: none; }
+}

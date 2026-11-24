@@ -1,27 +1,27 @@
-.encabezado {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  h1 { font: var(--mat-sys-headline-small); margin: 0 0 4px; }
-  p { margin: 0; color: var(--mat-sys-on-surface-variant); }
-}
-
 .acciones { display: flex; gap: 8px; }
 
 .resumen {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 16px;
   color: var(--mat-sys-on-surface-variant);
+  > span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--acento) 30%, transparent);
+    background: color-mix(in srgb, var(--acento) 12%, var(--mat-sys-surface-container-lowest));
+    mat-icon { color: var(--acento); }
+  }
   strong { font: var(--mat-sys-title-large); color: var(--mat-sys-on-surface); }
-  .ok strong { color: #1b7a36; }
+  .ok strong { color: var(--ok); }
   .ko strong { color: var(--mat-sys-error); }
 }
 
-.tabla { overflow: hidden; }
+.tabla { overflow: hidden; border-top: 4px solid var(--mat-sys-primary); }
 .scroll { overflow-x: auto; }
 table { width: 100%; }
 .num { text-align: right; }

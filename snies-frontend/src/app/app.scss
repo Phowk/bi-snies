@@ -1,39 +1,144 @@
-.shell { height: 100vh; }
-
-.nav {
-  width: 240px;
+:host {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--mat-sys-outline-variant);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.saltar {
+  position: absolute;
+  left: 16px;
+  top: -48px;
+  z-index: 20;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  &:focus { top: 8px; }
+}
+
+// ---------------------------------------------------------------- barra superior
+
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-lowest) 86%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.barra-interior {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--alto-barra);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
 .marca {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 20px 16px;
-  mat-icon { color: var(--mat-sys-primary); font-size: 32px; width: 32px; height: 32px; }
-  strong { display: block; font: var(--mat-sys-title-medium); }
-  small { color: var(--mat-sys-on-surface-variant); }
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  margin-right: auto;
+  border-radius: 8px;
+  strong { display: block; font: 600 1.05rem/1.1 var(--fuente-titulos); }
+  small { display: block; font: var(--mat-sys-label-small); color: var(--mat-sys-on-surface-variant); }
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--mat-sys-primary), color-mix(in srgb, var(--acento-verde) 55%, var(--mat-sys-primary)));
+  color: var(--mat-sys-on-primary);
+}
+
+nav ul {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 20px;
+  color: var(--mat-sys-on-surface-variant);
+  text-decoration: none;
+  font: var(--mat-sys-label-large);
+  transition: background-color 120ms, color 120ms;
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  &:hover { background: var(--mat-sys-surface-container-high); color: var(--mat-sys-on-surface); }
+  &.activo { background: var(--mat-sys-secondary-container); color: var(--mat-sys-on-secondary-container); }
 }
 
 .aviso-mock {
-  margin: auto 16px 16px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
   background: var(--mat-sys-tertiary-container);
   color: var(--mat-sys-on-tertiary-container);
   font: var(--mat-sys-label-medium);
+  white-space: nowrap;
 }
 
-.contenido {
-  padding: 24px;
+// En pantallas estrechas los enlaces quedan solo con icono; el texto sigue disponible para lectores.
+@media (width < 900px) {
+  .texto-enlace {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  nav a { padding: 0 10px; }
+  .aviso-mock { display: none; }
+}
+
+@media (width < 480px) {
+  .barra-interior { padding: 0 12px; gap: 8px; }
+  .marca-texto small { display: none; }
+}
+
+// ---------------------------------------------------------------- contenido y pie
+
+main {
+  flex: 1;
+  width: 100%;
+  &:focus { outline: none; }
+}
+
+.pie {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(90deg, var(--acento-azul), var(--acento-verde), var(--acento-naranja), var(--acento-violeta)) 1;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+.pie-interior {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
   max-width: 1400px;
   margin: 0 auto;
-}
-
-@media (max-width: 800px) {
-  .nav { width: 72px; }
-  .marca div, .aviso-mock, [matListItemTitle] { display: none; }
-  .contenido { padding: 16px; }
+  padding: 20px 24px;
+  box-sizing: border-box;
 }

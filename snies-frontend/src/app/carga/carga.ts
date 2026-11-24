@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,7 +8,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EXTENSIONES_PERMITIDAS, EtlService, TAMANO_MAXIMO_MB, validarArchivo } from '../core/etl.service';
-import { Carga } from '../core/models';
+import { Carga, ResumenErrores } from '../core/models';
 import { EstadoCargaComponent } from '../shared/estado-carga';
 
 type Fase = 'inicio' | 'subiendo' | 'procesando' | 'fin';
@@ -32,6 +32,13 @@ export class CargaPage {
   protected readonly error = signal<string | null>(null);
   protected readonly progreso = signal(0);
   protected readonly carga = signal<Carga | null>(null);
+  protected readonly anomalias = signal<ResumenErrores | null>(null);
+
+  protected readonly pasos = ['Elegir archivo', 'Subir', 'Procesar', 'Resultado'];
+  protected readonly pasoActual = computed(() => {
+    const f = this.fase();
+    return f === 'inicio' ? 0 : f === 'subiendo' ? 1 : f === 'procesando' ? 2 : 3;
+  });
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.sub?.unsubscribe());
@@ -76,10 +83,18 @@ export class CargaPage {
     this.sub = this.etl.seguir(id).subscribe({
       next: c => {
         this.carga.set(c);
-        if (c.estado !== 'EN_PROCESO') this.fase.set('fin');
+        if (c.estado !== 'EN_PROCESO') {
+          this.fase.set('fin');
+          this.cargarAnomalias(c.id_carga);
+        }
       },
       error: (e: HttpErrorResponse) => this.fallar(e),
     });
+  }
+
+  /** Resumen de audit.log_errores_etl. Es informativo: si falla, simplemente no se muestra. */
+  private cargarAnomalias(id: number) {
+    this.etl.errores(id).subscribe({ next: r => this.anomalias.set(r), error: () => this.anomalias.set(null) });
   }
 
   private fallar(e: HttpErrorResponse) {
@@ -92,6 +107,7 @@ export class CargaPage {
     this.fase.set('inicio');
     this.archivo.set(null);
     this.carga.set(null);
+    this.anomalias.set(null);
     this.error.set(null);
   }
 

@@ -85,6 +85,8 @@ export const mockInterceptor: HttpInterceptorFn = (req, next) => {
     const c = cargas.find(x => x.id_carga === +mCarga[1]);
     return c ? ok({ ...avanzar(c) }) : fallo(404, 'Carga no encontrada');
   }
+  const mErrores = ruta.match(/^\/etl\/cargas\/(\d+)\/errores$/);
+  if (req.method === 'GET' && mErrores) return ok({ id_carga: +mErrores[1], total_tipos: 0, items: [] });
   if (req.method === 'GET' && ruta === '/olap/filtros') return ok(opciones(programas));
   if (req.method === 'GET' && ruta === '/olap/kpis') return ok(kpis(programas, leerFiltros(req.params)));
   const mOlap = ruta.match(/^\/olap\/(\w+)$/);
