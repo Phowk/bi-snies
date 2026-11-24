@@ -2,7 +2,7 @@
 import hashlib
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 import pandas as pd
 from app.db import get_raw_connection
@@ -88,7 +88,7 @@ def limpiar_codigo(val: Any) -> str | None:
     return s if s else None
 
 
-def parsear_fecha(val: Any) -> tuple[datetime.date | None, str | None]:
+def parsear_fecha(val: Any) -> tuple[date | None, str | None]:
     if es_marcador_nulo(val):
         return None, None
 
@@ -164,9 +164,10 @@ def ejecutar_etl(ruta_archivo: str, id_carga: int) -> dict[str, Any]:
         nombre_arch = os.path.basename(ruta_archivo).lower()
         if nombre_arch.endswith((".xlsx", ".xls")):
             # Seleccionar explícitamente la hoja 'Programas' si existe
-            xl = pd.ExcelFile(ruta_archivo)
-            hoja = "Programas" if "Programas" in xl.sheet_names else xl.sheet_names[0]
-            df = xl.parse(sheet_name=hoja)
+            # `with` cierra el archivo: en Windows un archivo abierto no se puede borrar después.
+            with pd.ExcelFile(ruta_archivo) as xl:
+                hoja = "Programas" if "Programas" in xl.sheet_names else xl.sheet_names[0]
+                df = pd.read_excel(xl, sheet_name=hoja)
         else:
             df = pd.read_csv(ruta_archivo, encoding="utf-8-sig")
 
@@ -306,6 +307,13 @@ def ejecutar_etl(ruta_archivo: str, id_carga: int) -> dict[str, Any]:
                 costo,
                 hash_fila
             ))
+
+        # Un archivo sin ningún programa válido (vacío, u otra hoja de cálculo) no debe quedar como EXITOSO.
+        if not filas_staging:
+            raise ValueError(
+                f"El archivo no contiene programas válidos ({total_filas} filas leídas, ninguna con código SNIES numérico "
+                "en la columna 8). Verifique que sea el reporte de programas del SNIES (hoja 'Programas', 39 columnas)."
+            )
 
         # 1. Inserción masiva en staging
         cur.execute("DELETE FROM staging.stg_programas_raw WHERE id_carga = %s;", (id_carga,))

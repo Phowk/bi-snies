@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db import close_pool, init_pool
-from app.routers import analytics, etl
+from app.routers import analytics, etl, olap
 
 
 @asynccontextmanager
@@ -38,6 +38,7 @@ app.add_middleware(
 
 # Registro de routers
 app.include_router(etl.router)
+app.include_router(olap.router)
 app.include_router(analytics.router)
 
 
